@@ -1,4 +1,3 @@
-
 func! s:TmuxBufferName()
     let l:list = systemlist('tmux list-buffers -F"#{buffer_name}"')
     if len(l:list)==0
@@ -14,7 +13,7 @@ endfunc
 
 func! s:Enable()
 
-    if $TMUX=='' 
+    if $TMUX==''
         " not in tmux session
         return
     endif
@@ -27,8 +26,9 @@ func! s:Enable()
         augroup vimtmuxclipboard
             autocmd!
             autocmd FocusLost * call s:update_from_tmux()
-            autocmd	FocusGained   * call s:update_from_tmux()
+            autocmd	FocusGained * call s:update_from_tmux()
             autocmd TextYankPost * silent! call system('tmux loadb -',join(v:event["regcontents"],"\n"))
+            autocmd TextYankPost * silent! call system('~/.tmux/yank.sh',join(v:event["regcontents"],"\n"))
         augroup END
         let @" = s:TmuxBuffer()
     else
@@ -36,12 +36,12 @@ func! s:Enable()
         " This is a workaround for vim
         augroup vimtmuxclipboard
             autocmd!
-            autocmd FocusLost     *  silent! call system('tmux loadb -',@")
-            autocmd	FocusGained   *  let @" = s:TmuxBuffer()
+            autocmd FocusLost * silent! call system('tmux loadb -',@")
+            autocmd TextYankPost * silent! call system('~/.tmux/yank.sh',@")
+            autocmd	FocusGained * let @" = s:TmuxBuffer()
         augroup END
         let @" = s:TmuxBuffer()
     endif
-
 endfunc
 
 func! s:update_from_tmux()
@@ -54,11 +54,3 @@ endfunc
 
 call s:Enable()
 
-" " workaround for this bug
-" if shellescape("\n")=="'\\\n'"
-" 	let l:s=substitute(l:s,'\\\n',"\n","g")
-" 	let g:tmp_s=substitute(l:s,'\\\n',"\n","g")
-" 	");
-" 	let g:tmp_cmd='tmux set-buffer ' . l:s
-" endif
-" silent! call system('tmux loadb -',l:s)
